@@ -30,10 +30,11 @@ texts <- dir_ls(here::here("qmd")) %>%
   path_file() %>%
   path_ext_remove()
 
-links <- str_c("./", texts, ".html", collapse="")
+links <- str_c("./", texts, ".html")
 ```
 
 ```{r, results="asis"}
 map2(texts, links, md_link) %>%
-  list_c()
+  list_c() %>%
+  cat(sep = "\n\n")
 ```
