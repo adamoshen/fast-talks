@@ -1,0 +1,194 @@
+---
+title: "Spotting differences"
+date: "January 6, 2026"
+date-format: long
+author: "Adam Shen"
+format:
+  revealjs:
+    theme: [dark, "../inst/slides.scss"]
+    incremental: true
+    code-line-numbers: false
+    overview: true
+    progress: true
+    history: false
+    touch: true
+    keyboard: true
+    controls: true
+    controls-back-arrows: visible
+    controls-layout: edges
+    help: true
+    highlight-style: "../inst/adam_one_light.theme"
+    from: markdown-smart
+    embed-resources: true
+    html-math-method: katex
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  echo=TRUE, message=FALSE, warning=FALSE
+)
+
+new_hooks <- fansi::set_knit_hooks(
+  knitr::knit_hooks,
+  which = c("output", "message", "warning", "error")
+)
+
+options(
+  crayon.enabled = TRUE,
+  width = 190
+)
+```
+
+## Motivation
+
+:::: {.columns}
+
+::: {.column width="50%"}
+![](../inst/fig/find-the-difference.jpg)
+:::
+
+::: {.column width="50%"}
+- When refactoring, testing, or debugging code, we often want to check that our new results match
+the old results.
+
+- When differences exist, we may also be interested in **where** and **how** they differ.
+:::
+
+::::
+
+## The `{waldo}` package
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+```{r, eval=FALSE}
+# install.packages("pak")
+pak::pak("waldo")
+```
+
+<br>
+
+```{r}
+library(waldo)
+```
+
+- Inspired by the Waldo books where one needs to find Waldo among many Waldo-lookalikes. 
+- Finding Waldo is quite similar to when you're trying to check if your new results match the
+old results. 
+
+:::
+
+::: {.column width="40%"}
+![](../inst/fig/wheres-waldo.jpg)
+:::
+
+::::
+
+## `waldo::compare()`
+
+The main function of the `{waldo}` package is `compare()`. Differences between objects are
+coloured. Quickly running through the examples from the website:
+
+- Deletion
+  ```{r}
+  compare(c("a", "b", "c"), c("a", "b"))
+  ```
+- Addition
+  ```{r}
+  compare(c("a", "b"), c("a", "b", "c"))
+  ```
+- Change
+  ```{r}
+  compare(c("a", "b", "c"), c("a", "B", "c"))
+  ```
+
+# Comparing data frames
+
+Let's see how it looks when we compare data frames.
+
+```{r}
+library(tidyverse)
+```
+
+## Add an `id` column to `rock` data set
+
+Let's take the `rock` data set from base-R and add an `id` column so that we can easily update
+rows by row number.
+
+```{r}
+rock <- datasets::rock %>%
+  as_tibble() %>%
+  mutate(
+    across(everything(), as.double),
+    id = 1:n()
+  ) %>%
+  relocate(id)
+
+rock
+```
+
+## Create some changes - 1
+
+For the first change, take the fourth row and make the `area` value `NA`:
+
+```{r}
+change1 <- rock %>%
+  slice(4) %>%
+  mutate(area = NA)
+
+change1
+```
+
+## View the changes - 1
+
+```{r}
+rock1 <- rock %>%
+  rows_update(change1, by = "id")
+
+rock1
+```
+
+## Comparison - 1
+
+```{r}
+compare(rock, rock1)
+```
+
+## Create some changes - 2
+
+For the second change, take rows 8, 10, and 11, and multiply all values (except `id`) by 1.10.
+
+```{r}
+change2 <- rock %>%
+  slice(c(8, 10, 11)) %>%
+  mutate(
+    across(
+      -id,
+      \(x) x * 1.10
+    )
+  )
+
+change2
+```
+
+## View the changes - 2
+
+```{r}
+rock2 <- rock %>%
+  rows_update(change2, by = "id")
+
+rock2
+```
+
+## Comparison - 2
+
+```{r}
+compare(rock, rock2)
+```
+
+# Summary
+
+- Use `waldo::compare()` to easily compare changes between objects.
+
+- Note: `waldo::compare()` works for vectors, data frames, lists, and more!
