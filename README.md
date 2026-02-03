@@ -1,1 +1,1 @@
-# deep-dives
+# fast-talks
