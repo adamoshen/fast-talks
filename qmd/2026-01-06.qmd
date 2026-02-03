@@ -75,7 +75,9 @@ library(waldo)
 
 - Inspired by the Waldo books where one needs to find Waldo among many Waldo-lookalikes. 
 - Finding Waldo is quite similar to when you're trying to check if your new results match the
-old results. 
+old results.
+- (I'm aware that this is the whole point of unit testing ([testthat](https://testthat.r-lib.org/)),
+but sometimes we just don't 😜)
 
 :::
 
