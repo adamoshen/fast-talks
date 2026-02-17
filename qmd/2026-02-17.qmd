@@ -87,7 +87,7 @@ discounts on the app or on social media 🤑.
 
 ::::
 
-## FYI: These deal runs until April 19, 2026
+## FYI: These deals run until April 19, 2026
 
 ::: {layout="[10,-6,10]"}
 ![](../inst/fig/large-classic.jpg)
@@ -290,6 +290,9 @@ With discount:
 basic_comparison_with_discounts
 ```
 
+The discount makes the Large Pepperoni pizza comparable to the Fairlife Shake in Price per Grams of
+Protein 🤯!
+
 ## Specialty pizzas
 
 ```{r}
@@ -307,8 +310,11 @@ specialty_pizzas %>%
 
 ## Comparing Fairlife with the specialty pizzas
 
+::: {.panel-tabset}
+
+### Code
+
 ```{r}
-#| code-fold: true
 specialty_comparison <- specialty_pizzas %>%
   mutate(size = str_to_title(size)) %>%
   unite(name, size, flavour, sep = " ") %>%
@@ -317,16 +323,21 @@ specialty_comparison <- specialty_pizzas %>%
   select(name, price, calories, protein, price_per_g_protein, calorie_protein_ratio)
 ```
 
-## Comparing Fairlife with the specialty pizzas
+### Output
 
 ```{r, echo=FALSE}
 specialty_comparison
 ```
 
-## Comparing Fairlife with specialty pizzas with discount
+:::
+
+## Effect of discount on specialty pizzas
+
+::: {.panel-tabset}
+
+### Code
 
 ```{r}
-#| code-fold: true
 specialty_discounts <- tibble(
   name = c("Large 3 Meat Treat", "Large Canadian", "Large Ultimate Supreme", "Large Hula Hawaiian"),
   price = 13.99
@@ -341,9 +352,7 @@ specialty_comparison_with_discounts <- specialty_pizzas %>%
   select(name, price, calories, protein, price_per_g_protein, calorie_protein_ratio)
 ```
 
-## Effect of discount on specialty pizzas
-
-::: {.panel-tabset}
+Note: The Large Veggie and Large BBQ Chicken are excluded from these discounts!
 
 ### Without discount
 
@@ -378,6 +387,16 @@ specialty_comparison_with_discounts %>%
     theme = rt_theme
   )
 ```
+
+### Comments
+
+Without discounts, the Medium specialty pizzas actually have a lower Price Per Gram of Protein!
+Unsurprisingly, the Hula Hawaiian and the BBQ Chicken have the lowest Calorie to Protein Ratios
+(after the Fairlife Shake). I'm not really a fan of the BBQ Chicken pizza though 🫤.
+
+With discounts, the Large specialty pizzas have a better Price Per Gram of Protein than their
+Medium counterparts and get closer to the Fairlife Shake. The Large Hawaiian pizza excels over both
+metrics!
 
 :::
 
