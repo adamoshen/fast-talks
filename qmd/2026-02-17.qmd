@@ -1,0 +1,533 @@
+---
+title: "The Pizza Problem"
+date: "February 3, 2026"
+date-format: long
+author: "Adam Shen"
+format:
+  revealjs:
+    theme: [dark, "../inst/slides.scss"]
+    incremental: true
+    code-line-numbers: false
+    overview: true
+    progress: true
+    history: false
+    touch: true
+    keyboard: true
+    controls: true
+    controls-back-arrows: visible
+    controls-layout: edges
+    help: true
+    highlight-style: "../inst/adam_one_light.theme"
+    from: markdown-smart
+    embed-resources: true
+    html-math-method: katex
+fig-format: svg
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  dev = "svglite"
+)
+
+new_hooks <- fansi::set_knit_hooks(
+  knitr::knit_hooks,
+  which = c("output", "message", "warning", "error")
+)
+
+options(crayon.enabled = TRUE)
+
+rt_theme <- reactable::reactableTheme(color = "black")
+```
+
+## I've got 99 problems and dinner is one
+
+**Let's set the scene:**
+
+1. I've just finished work. I'm exhausted 😵 and I don't want to prepare my own dinner.
+
+2. Takeout or pick-up over dine-in or delivery because I don't want to be paying extra tips or
+service charges 😒.
+
+3. I've been eating a lot of 🐔 chicken and 🥬 leafy salads 🥗 lately, and I want something with a
+different flavour profile.
+
+4. 💪🏼 I'm trying to hit my daily protein goals while also making sure that I'm not going too
+overboard with the calories (a little over is okay).
+
+5. Skipping meals is 🙅🏼‍♂️ when you're trying to make 💪🏼 gainsss 🦵🏼.
+
+6. The food needs to be ready reasonably fast so that I have enough time to digest it before heading
+to the gym 🏋🏼‍♂️ later in the evening. 
+
+## Solution: Little Caesars
+
+### (Not sponsored btw)
+
+:::: {.columns}
+
+::: {.column width="60%"}
+**Why?**
+
+1. Their sauce is 👌🏼 perfectly 👌🏼 seasoned.
+
+2. Their dough is also perfect: crispy on the outside and soft and airy on the inside. (Unlike
+Domino's where the crust is super thick and dense 😒)
+
+3. Their items are reasonably priced 🫰🏼 for the amount of food you get and there are often
+discounts on the app or on social media 🤑.
+
+4. Leftovers reheat well so you can eat it again tomorrow 🤤. See
+[this tip (Instagram)](https://www.instagram.com/p/DFVDw-wRA31/).
+:::
+
+::: {.column width="40%"}
+![](../inst/fig/little-caesars.jpg)
+:::
+
+::::
+
+## FYI: These deal runs until April 19, 2026
+
+::: {layout="[10,-6,10]"}
+![](../inst/fig/large-classic.jpg)
+
+![](../inst/fig/large-specialty.jpg)
+:::
+
+Fine print: Max. 10 per transaction!
+
+## Now I've got new problems
+
+1. Of their "core" pizza offerings, which pizza is the 👍🏼💰 most cost effective while having the
+⬇️🫃🏼 least calories and the ⬆️💪🏼 most protein?
+(We're going to ignore fat, cholesterol, sodium, etc.)
+
+2. Does this change under the conditions of either of these deals:
+    - "Large pepperoni/cheese pizza for \$9.99".
+    - "Large specialty pizza for \$13.99".
+
+::: {.callout-tip}
+Recall that (in most cases) a food is considered "high-protein" if its protein content (in grams) is
+at least one-tenth of its calories. For example, a food with 100 calories should have **at least**
+10g of protein.
+:::
+
+## The gold star reference
+
+:::: {.columns}
+
+::: {.column width="60%"}
+![](../inst/fig/fairlife-protein-shakes.jpg)
+:::
+
+::: {.column width="40%"}
+As of February 2026, the price of Fairlife Nutrition Plan shakes has increased to \$49.99 for a case
+of 18 at Costco.
+
+Each bottle has **150 calories** and **30g of protein** (high protein).
+
+This works out to be \$2.78 per bottle, or \$0.09267 per gram of protein. Calorie-to-protein ratio
+is 5 (lower is better).
+:::
+
+::::
+
+## Metrics
+
+::: {.nonincremental}
+
+1. Price per gram of protein.
+    - Fairlife: \$0.09267 per gram of protein.
+
+2. Calorie-to-protein ratio.
+    - Fairlife: 5.
+
+:::
+
+## The [lcpizza](https://adamoshen.github.io/lcpizza) package <img src="../inst/fig/lcpizza-logo.png" align="right"/>
+
+To aid me in this analysis, I recently took the time to collect the nutrition and local pricing data
+and bundle it up as the R package, [lcpizza](https://adamoshen.github.io/lcpizza)!
+
+. . .
+
+The package can be installed as usual using either:
+
+```{r, eval=FALSE}
+# install.packages("pak")
+pak::pak("adamoshen/lcpizza")
+```
+
+Or,
+
+```{r, eval=FALSE}
+# install.packages("remotes")
+remotes::install_github("adamoshen/lcpizza")
+```
+
+# The analysis
+
+```{r}
+library(tidyverse)
+library(patchwork)
+library(lcpizza)
+```
+
+## Intro to `lcpizza`
+
+```{r}
+pizzas
+```
+
+## Intro to `lcpizza`
+
+```{r}
+toppings
+```
+
+## Assemble our reference data
+
+```{r}
+#| code-fold: true
+fairlife <- tibble(
+  name = "Fairlife Protein Shake",
+  price = 49.99 / 18,
+  calories = 150,
+  protein = 30
+)
+```
+
+```{r}
+fairlife
+```
+
+## Write function to get our metrics
+
+```{r}
+#| code-fold: true
+bind_metrics <- function(.data) {
+  mutate(
+    .data,
+    price_per_g_protein = price / protein,
+    calorie_protein_ratio = calories / protein
+  )
+}
+```
+
+```{r}
+#| code-fold: true
+bind_metrics(fairlife)
+```
+
+## The basics
+
+Let's first focus on the medium cheese, medium pepperoni, large cheese, and large pepperoni pizzas.
+
+```{r}
+#| code-fold: true
+basic_pizzas <- pizzas %>%
+  filter(
+    size %in% c("medium", "large"),
+    crust == "regular",
+    flavour %in% c("Cheese", "Pepperoni")
+  )
+```
+
+```{r}
+#| code-fold: true
+basic_pizzas %>%
+  select(size, flavour, price, calories, protein)
+```
+
+## Comparing Fairlife with the basic pizzas
+
+```{r}
+#| code-fold: true
+basic_comparison <- basic_pizzas %>%
+  mutate(size = str_to_title(size)) %>%
+  unite(name, size, flavour, sep = " ") %>%
+  bind_rows(fairlife) %>%
+  bind_metrics() %>%
+  select(name, price, calories, protein, price_per_g_protein, calorie_protein_ratio)
+```
+
+```{r}
+#| code-fold: true
+basic_comparison
+```
+
+## Comparing Fairlife with basic pizzas with discount
+
+```{r}
+#| code-fold: true
+basic_discounts <- tibble(
+  name = c("Large Pepperoni", "Large Cheese"),
+  price = 9.99
+)
+
+basic_comparison_with_discounts <- basic_pizzas %>%
+  mutate(size = str_to_title(size)) %>%
+  unite(name, size, flavour, sep = " ") %>%
+  bind_rows(fairlife) %>%
+  rows_update(basic_discounts, by = "name") %>%
+  bind_metrics() %>%
+  select(name, price, calories, protein, price_per_g_protein, calorie_protein_ratio)
+```
+
+## Effect of discount on basic pizzas
+
+Without discount:
+
+```{r, echo=FALSE}
+basic_comparison
+```
+
+With discount:
+
+```{r, echo=FALSE}
+#| code-fold: true
+basic_comparison_with_discounts
+```
+
+## Specialty pizzas
+
+```{r}
+#| code-fold: true
+specialty_pizzas <- pizzas %>%
+  filter(crust == "regular") %>%
+  filter_out(flavour %in% c("Cheese", "Pepperoni")) # Requires dplyr 1.2.0
+```
+
+```{r}
+#| code-fold: true
+specialty_pizzas %>%
+  select(size, flavour, price, calories, protein)
+```
+
+## Comparing Fairlife with the specialty pizzas
+
+```{r}
+#| code-fold: true
+specialty_comparison <- specialty_pizzas %>%
+  mutate(size = str_to_title(size)) %>%
+  unite(name, size, flavour, sep = " ") %>%
+  bind_rows(fairlife) %>%
+  bind_metrics() %>%
+  select(name, price, calories, protein, price_per_g_protein, calorie_protein_ratio)
+```
+
+## Comparing Fairlife with the specialty pizzas
+
+```{r, echo=FALSE}
+specialty_comparison
+```
+
+## Comparing Fairlife with specialty pizzas with discount
+
+```{r}
+#| code-fold: true
+specialty_discounts <- tibble(
+  name = c("Large 3 Meat Treat", "Large Canadian", "Large Ultimate Supreme", "Large Hula Hawaiian"),
+  price = 13.99
+)
+
+specialty_comparison_with_discounts <- specialty_pizzas %>%
+  mutate(size = str_to_title(size)) %>%
+  unite(name, size, flavour, sep = " ") %>%
+  bind_rows(fairlife) %>%
+  rows_update(specialty_discounts, by = "name") %>%
+  bind_metrics() %>%
+  select(name, price, calories, protein, price_per_g_protein, calorie_protein_ratio)
+```
+
+## Effect of discount on specialty pizzas
+
+::: {.panel-tabset}
+
+### Without discount
+
+```{r, echo=FALSE}
+specialty_comparison %>%
+  select(name, price_per_g_protein, calorie_protein_ratio) %>%
+  mutate(across(where(is.numeric), \(x) round(x, digits = 4))) %>%
+  arrange(price_per_g_protein) %>%
+  reactable::reactable(
+    defaultPageSize = 5,
+    highlight = TRUE,
+    outlined = TRUE,
+    bordered = TRUE,
+    striped = TRUE,
+    theme = rt_theme
+  )
+```
+
+### With discount
+
+```{r, echo=FALSE}
+specialty_comparison_with_discounts %>%
+  select(name, price_per_g_protein, calorie_protein_ratio) %>%
+  mutate(across(where(is.numeric), \(x) round(x, digits = 4))) %>%
+  arrange(price_per_g_protein) %>%
+    reactable::reactable(
+    defaultPageSize = 5,
+    highlight = TRUE,
+    outlined = TRUE,
+    bordered = TRUE,
+    striped = TRUE,
+    theme = rt_theme
+  )
+```
+
+:::
+
+# Visual summaries
+
+## Large pizzas without discount
+
+::: {.panel-tabset}
+
+### Data prep
+
+```{r}
+large_pizzas <- pizzas %>%
+  filter(size == "large", crust == "regular") %>%
+  mutate(size = str_to_title(size)) %>%
+  unite(name, size, flavour, sep = " ") %>%
+  bind_rows(fairlife) %>%
+  bind_metrics() %>%
+  select(name, price, calories, protein, price_per_g_protein, calorie_protein_ratio) %>%
+  mutate(bar_fill = if_else(str_detect(name, "Fairlife"), "#9C755F", "#F28E2B"))
+```
+
+### Code for plotting
+
+```{r large_pizzas, eval=FALSE}
+large_ppgp <- large_pizzas %>%
+  slice_min(price_per_g_protein, n = 7) %>%
+  mutate(
+    name = fct_reorder(name, price_per_g_protein),
+    price_label = scales::number(price_per_g_protein, accuracy = 0.0001, prefix = "$")
+  ) %>%
+  ggplot(aes(x = price_per_g_protein, y = name)) +
+  geom_col(aes(fill = bar_fill), show.legend = FALSE) +
+  geom_text(aes(x = price_per_g_protein + 0.05, label = price_label)) +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme_sub_axis_x(text = element_blank()) +
+  theme_sub_axis_y(text = element_text(size = 12)) +
+  theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
+  coord_cartesian(clip = "off") +
+  labs(y = "", x = "Price per gram of protein (lower is better)")
+  
+
+large_cpr <- large_pizzas %>%
+  slice_min(calorie_protein_ratio, n = 7) %>%
+  mutate(
+    name = fct_reorder(name, calorie_protein_ratio),
+    ratio_label = scales::number(calorie_protein_ratio, accurary = 0.01)
+  ) %>%
+  ggplot(aes(x = calorie_protein_ratio, y = name)) +
+  geom_col(aes(fill = bar_fill), show.legend = FALSE) +
+  geom_text(aes(x = calorie_protein_ratio + 3, label = ratio_label)) +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme_sub_axis_x(text = element_blank()) +
+  theme_sub_axis_y(text = element_text(size = 12)) +
+  theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
+  coord_cartesian(clip = "off") +
+  labs(y = "", x = "Calorie to protein ratio (lower is better)")
+  
+
+large_ppgp + large_cpr
+```
+
+### Plot
+
+```{r large_pizzas, echo=FALSE}
+```
+
+:::
+
+## Large pizzas with discount
+
+::: {.panel-tabset}
+
+### Data prep
+
+```{r}
+large_pizzas_with_discount <- pizzas %>%
+  filter(size == "large", crust == "regular") %>%
+  mutate(size = str_to_title(size)) %>%
+  unite(name, size, flavour, sep = " ") %>%
+  rows_update(basic_discounts, by = "name") %>%
+  rows_update(specialty_discounts, by = "name") %>%
+  bind_rows(fairlife) %>%
+  bind_metrics() %>%
+  select(name, price, calories, protein, price_per_g_protein, calorie_protein_ratio) %>%
+  mutate(bar_fill = if_else(str_detect(name, "Fairlife"), "#9C755F", "#F28E2B"))
+```
+
+### Code for plotting
+
+```{r large_pizzas_discount, eval=FALSE}
+large_ppgp_discount <- large_pizzas_with_discount %>%
+  slice_min(price_per_g_protein, n = 7) %>%
+  mutate(
+    name = fct_reorder(name, price_per_g_protein),
+    price_label = scales::number(price_per_g_protein, accuracy = 0.0001, prefix = "$")
+  ) %>%
+  ggplot(aes(x = price_per_g_protein, y = name)) +
+  geom_col(aes(fill = bar_fill), show.legend = FALSE) +
+  geom_text(aes(x = price_per_g_protein + 0.05, label = price_label)) +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme_sub_axis_x(text = element_blank()) +
+  theme_sub_axis_y(text = element_text(size = 12)) +
+  theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
+  coord_cartesian(clip = "off") +
+  labs(y = "", x = "Price per gram of protein (lower is better)")
+  
+
+large_cpr_discount <- large_pizzas_with_discount %>%
+  slice_min(calorie_protein_ratio, n = 7) %>%
+  mutate(
+    name = fct_reorder(name, calorie_protein_ratio),
+    ratio_label = scales::number(calorie_protein_ratio, accurary = 0.01)
+  ) %>%
+  ggplot(aes(x = calorie_protein_ratio, y = name)) +
+  geom_col(aes(fill = bar_fill), show.legend = FALSE) +
+  geom_text(aes(x = calorie_protein_ratio + 3, label = ratio_label)) +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme_sub_axis_x(text = element_blank()) +
+  theme_sub_axis_y(text = element_text(size = 12)) +
+  theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
+  coord_cartesian(clip = "off") +
+  labs(y = "", x = "Calorie to protein ratio (lower is better)")
+  
+
+large_ppgp_discount + large_cpr_discount
+```
+
+### Plot
+
+```{r large_pizzas_discount, echo=FALSE}
+```
+
+:::
+
+# Summary
+
+- With or without discounts, the Large BBQ Chicken and Large Hula Hawaiian pizzas are slightly more
+"health conscious" 😏.
+
+- With discounts, the Large Pepperoni is comparable to the Fairlife Protein Shake in price per gram
+of protein. However, the Large Hawaiian is not too far off!
+
+- Therefore, if you are trying to make gains, save money, and let loose once in a while, the Large
+Hawaiian pizza is the way to go.
+
+. . .
+
+**Alternative conclusion**: 🍍 Pineapple 🍍 belongs on pizza 😎 
