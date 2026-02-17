@@ -1,5 +1,5 @@
 ---
-title: "Deep Dives"
+title: "Fast Talks"
 output:
   html_document:
     theme:
@@ -26,11 +26,17 @@ library(gluedown)
 ## Slides
 
 ```{r}
-texts <- dir_ls(here::here("qmd")) %>%
+dates <- dir_ls(here::here("qmd")) %>%
   path_file() %>%
   path_ext_remove()
 
-links <- str_c("./", texts, ".html")
+texts <- dir_ls(here::here("qmd")) %>%
+  map(rmarkdown::yaml_front_matter) %>%
+  map("title") %>%
+  unname() %>%
+  str_c(dates, ., sep = ": ")
+
+links <- str_c("./", dates, ".html")
 ```
 
 ```{r, results="asis"}
