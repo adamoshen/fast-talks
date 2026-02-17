@@ -444,7 +444,7 @@ large_cpr <- large_pizzas %>%
   slice_min(calorie_protein_ratio, n = 7) %>%
   mutate(
     name = fct_reorder(name, calorie_protein_ratio),
-    ratio_label = scales::number(calorie_protein_ratio, accurary = 0.01)
+    ratio_label = scales::number(calorie_protein_ratio, accuracy = 0.01)
   ) %>%
   ggplot(aes(x = calorie_protein_ratio, y = name)) +
   geom_col(aes(fill = bar_fill), show.legend = FALSE) +
@@ -512,7 +512,7 @@ large_cpr_discount <- large_pizzas_with_discount %>%
   slice_min(calorie_protein_ratio, n = 7) %>%
   mutate(
     name = fct_reorder(name, calorie_protein_ratio),
-    ratio_label = scales::number(calorie_protein_ratio, accurary = 0.01)
+    ratio_label = scales::number(calorie_protein_ratio, accuracy = 0.01)
   ) %>%
   ggplot(aes(x = calorie_protein_ratio, y = name)) +
   geom_col(aes(fill = bar_fill), show.legend = FALSE) +
