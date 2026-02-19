@@ -168,7 +168,7 @@ remotes::install_github("adamoshen/lcpizza")
 
 # The analysis
 
-```{r}
+```{r, message = TRUE}
 library(tidyverse)
 library(patchwork)
 library(lcpizza)
@@ -438,7 +438,6 @@ large_ppgp <- large_pizzas %>%
   theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
   coord_cartesian(clip = "off") +
   labs(y = "", x = "Price per gram of protein (lower is better)")
-  
 
 large_cpr <- large_pizzas %>%
   slice_min(calorie_protein_ratio, n = 7) %>%
@@ -456,7 +455,6 @@ large_cpr <- large_pizzas %>%
   theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
   coord_cartesian(clip = "off") +
   labs(y = "", x = "Calorie to protein ratio (lower is better)")
-  
 
 large_ppgp + large_cpr
 ```
@@ -506,7 +504,6 @@ large_ppgp_discount <- large_pizzas_with_discount %>%
   theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
   coord_cartesian(clip = "off") +
   labs(y = "", x = "Price per gram of protein (lower is better)")
-  
 
 large_cpr_discount <- large_pizzas_with_discount %>%
   slice_min(calorie_protein_ratio, n = 7) %>%
@@ -524,7 +521,6 @@ large_cpr_discount <- large_pizzas_with_discount %>%
   theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
   coord_cartesian(clip = "off") +
   labs(y = "", x = "Calorie to protein ratio (lower is better)")
-  
 
 large_ppgp_discount + large_cpr_discount
 ```
@@ -535,6 +531,154 @@ large_ppgp_discount + large_cpr_discount
 ```
 
 :::
+
+## Afterthought
+
+Rather than looking at price per gram of protein, it probably would have been better to look at the
+price per 30g of protein to get an idea of how much you would be paying for pizza compared to a
+bottle of the Fairlife protein shake.
+
+```{r}
+bind_metrics2 <- function(.data) {
+  mutate(
+    .data,
+    price_per_30g_protein = price / protein * 30,
+    calorie_protein_ratio = calories / protein
+  )
+}
+```
+
+## Large pizzas without discount
+
+::: {.panel-tabset}
+
+### Data prep
+
+```{r}
+large_pizzas2 <- pizzas %>%
+  filter(size == "large", crust == "regular") %>%
+  mutate(size = str_to_title(size)) %>%
+  unite(name, size, flavour, sep = " ") %>%
+  bind_rows(fairlife) %>%
+  bind_metrics2() %>%
+  select(name, price, calories, protein, price_per_30g_protein, calorie_protein_ratio) %>%
+  mutate(bar_fill = if_else(str_detect(name, "Fairlife"), "#9C755F", "#F28E2B"))
+```
+
+### Code for plotting
+
+```{r large_pizzas2, eval=FALSE}
+large_ppgp2 <- large_pizzas2 %>%
+  slice_min(price_per_30g_protein, n = 7) %>%
+  mutate(
+    name = fct_reorder(name, price_per_30g_protein),
+    price_label = scales::number(price_per_30g_protein, accuracy = 0.01, prefix = "$")
+  ) %>%
+  ggplot(aes(x = price_per_30g_protein, y = name)) +
+  geom_col(aes(fill = bar_fill), show.legend = FALSE) +
+  geom_text(aes(label = price_label), nudge_x = 0.60) +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme_sub_axis_x(text = element_blank()) +
+  theme_sub_axis_y(text = element_text(size = 12)) +
+  theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
+  coord_cartesian(clip = "off") +
+  labs(y = "", x = "Price per 30 grams of protein (lower is better)")
+  
+
+large_cpr2 <- large_pizzas2 %>%
+  slice_min(calorie_protein_ratio, n = 7) %>%
+  mutate(
+    name = fct_reorder(name, calorie_protein_ratio),
+    ratio_label = scales::number(calorie_protein_ratio, accuracy = 0.01)
+  ) %>%
+  ggplot(aes(x = calorie_protein_ratio, y = name)) +
+  geom_col(aes(fill = bar_fill), show.legend = FALSE) +
+  geom_text(aes(label = ratio_label), nudge_x = 3) +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme_sub_axis_x(text = element_blank()) +
+  theme_sub_axis_y(text = element_text(size = 12)) +
+  theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
+  coord_cartesian(clip = "off") +
+  labs(y = "", x = "Calorie to protein ratio (lower is better)")
+  
+large_ppgp2 + large_cpr2
+```
+
+### Plot
+
+```{r large_pizzas2, echo=FALSE}
+```
+
+:::
+
+## Large pizzas with discount
+
+::: {.panel-tabset}
+
+### Data prep
+
+```{r}
+large_pizzas2_with_discount <- pizzas %>%
+  filter(size == "large", crust == "regular") %>%
+  mutate(size = str_to_title(size)) %>%
+  unite(name, size, flavour, sep = " ") %>%
+  rows_update(basic_discounts, by = "name") %>%
+  rows_update(specialty_discounts, by = "name") %>%
+  bind_rows(fairlife) %>%
+  bind_metrics2() %>%
+  select(name, price, calories, protein, price_per_30g_protein, calorie_protein_ratio) %>%
+  mutate(bar_fill = if_else(str_detect(name, "Fairlife"), "#9C755F", "#F28E2B"))
+```
+
+### Code for plotting
+
+```{r large_pizzas2_discount, eval=FALSE}
+large_ppgp_discount2 <- large_pizzas2_with_discount %>%
+  slice_min(price_per_30g_protein, n = 7) %>%
+  mutate(
+    name = fct_reorder(name, price_per_30g_protein),
+    price_label = scales::number(price_per_30g_protein, accuracy = 0.01, prefix = "$")
+  ) %>%
+  ggplot(aes(x = price_per_30g_protein, y = name)) +
+  geom_col(aes(fill = bar_fill), show.legend = FALSE) +
+  geom_text(aes(label = price_label), nudge_x = 0.60) +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme_sub_axis_x(text = element_blank()) +
+  theme_sub_axis_y(text = element_text(size = 12)) +
+  theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
+  coord_cartesian(clip = "off") +
+  labs(y = "", x = "Price per 30 grams of protein (lower is better)")
+
+large_cpr_discount2 <- large_pizzas2_with_discount %>%
+  slice_min(calorie_protein_ratio, n = 7) %>%
+  mutate(
+    name = fct_reorder(name, calorie_protein_ratio),
+    ratio_label = scales::number(calorie_protein_ratio, accuracy = 0.01)
+  ) %>%
+  ggplot(aes(x = calorie_protein_ratio, y = name)) +
+  geom_col(aes(fill = bar_fill), show.legend = FALSE) +
+  geom_text(aes(label = ratio_label), nudge_x = 3) +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme_sub_axis_x(text = element_blank()) +
+  theme_sub_axis_y(text = element_text(size = 12)) +
+  theme_sub_panel(grid.major = element_blank(), grid.minor = element_blank()) +
+  coord_cartesian(clip = "off") +
+  labs(y = "", x = "Calorie to protein ratio (lower is better)")
+
+large_ppgp_discount2 + large_cpr_discount2
+```
+
+### Plot
+
+```{r large_pizzas2_discount, echo=FALSE}
+```
+
+:::
+
 
 # Summary
 
