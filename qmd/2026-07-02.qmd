@@ -1,0 +1,353 @@
+---
+title: "Paths with fs"
+date: "July 2, 2026"
+date-format: long
+author: "Adam Shen"
+format:
+  revealjs:
+    theme: [dark, "../inst/slides.scss"]
+    incremental: true
+    code-line-numbers: false
+    auto-stretch: false
+    overview: true
+    progress: true
+    history: false
+    touch: true
+    keyboard: true
+    controls: true
+    controls-back-arrows: visible
+    controls-layout: edges
+    help: true
+    highlight-style: "../inst/adam_one_light.theme"
+    from: markdown-smart
+    embed-resources: true
+    html-math-method: katex
+fig-format: svg
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  dev = "svglite"
+)
+
+new_hooks <- fansi::set_knit_hooks(
+  knitr::knit_hooks,
+  which = c("output", "message", "warning", "error")
+)
+
+options(
+  crayon.enabled = TRUE, width = 120
+)
+```
+
+## The fs package
+
+![](../inst/fig/fs-logo.png)
+
+The [fs](https://fs.r-lib.org/) package provides consistent, clean (tidy) tools for
+working with file/folder paths.
+
+## Why fs?
+
+1. Provides tools for easy path construction (like what we've seen with the
+[here](https://here.r-lib.org/) package). No more using string concatenating/interpolating
+functions, such as:
+    - `paste()` / `paste0()`
+    - `str_c()` / `str_flatten()`
+    - `glue()`
+
+2. As opposed to the varying function naming conventions found in base-R, `fs` uses consistent
+function naming conventions, making functions easier to remember:
+    - `path_*()` for manipulating and constructing paths.
+    - `file_*()` for actions concerning files and file paths.
+    - `dir_*()` for actions concerning directories and directory paths.
+
+# Getting started
+
+```{r}
+library(fs)
+```
+
+## Using string functions for paths requires thinking
+
+- With functions such as `paste()`, `paste0()`, `str_c()`, `str_flatten()`, and `glue()`, you still
+need to take care of the slash separators.
+
+- It's not the most difficult thing in the world, and you can use the `sep` parameter, but it does
+require a bit of thinking and can get messy when mixing constant strings with string variables, or
+when accepting user input. 
+
+## Using string functions for paths requires thinking
+
+Examples:
+
+```{r}
+base_dir <- "./dir1/dir2"
+animals <- c("cat", "dog", "bird")
+
+paste(base_dir, animals, "file.abc", sep = "/")
+```
+
+. . .
+
+```{r}
+paste0(base_dir, "/", animals, "/file.abc")
+```
+
+. . .
+
+```{r}
+Sys.getenv("R_USER")
+
+stringr::str_c(Sys.getenv("R_USER"), animals, "file.abc", sep = "/")
+```
+
+## Creating paths with fs
+
+- We can create paths with fs using `path()`:
+  
+  ```{r}
+  path(Sys.getenv("R_USER"), animals, "file.abc")
+  ```
+
+- We can optionally use the `ext` parameter to set an extension, but this may not be ideal for use
+when accepting user input for a file name:
+  
+  ```{r}
+  path(base_dir, animals, "file", ext = "abc")
+  path(base_dir, animals, "file.abc", ext = "abc")
+  ```
+
+## Creating paths with fs
+
+Things that are good to know:
+
+- When creating paths with fs, directory paths never end in trailing slashes:
+
+  ```{r}
+  path("dir1/dir2/")
+  ```
+
+- Repeated slashes are reduced to single slashes:
+  
+  ```{r}
+  path("dir1//dir2///file.abc")
+  ```
+- Double backslashes are normalised to forward slashes:
+  
+  ```{r}
+  Sys.getenv("HOME")
+  path(Sys.getenv("HOME"))
+  ```
+
+## Extracting parts of a path
+
+- Condsider the following file path (coercing to a `fs_path` is optional):
+
+  ```{r}
+  this_file <- path(here::here("qmd", "2026-05-12.qmd"))
+  this_file
+  ```
+
+- We can obtain the name of the file using `path_file()`:
+  
+  ```{r}
+  path_file(this_file)
+  ```
+  
+- We can obtain the directory containing the file using `path_dir()`:
+  
+  ```{r}
+  path_dir(this_file)
+  ```
+
+## Extracting parts of a path
+
+- We can also get all the components of the file path, as a list, using `path_split()`:
+  
+  ```{r}
+  path_split(this_file)
+  ```
+
+## Checking existence
+
+- We can check if a file exists using `file_exists()`:
+
+  ```{r}
+  file_exists(this_file)
+  ```
+
+- We can check if a directory exists using `dir_exists()`:
+
+  ```{r}
+  path_dir(this_file)
+  dir_exists(path_dir(this_file))
+  ```
+
+## Creating directories
+
+- Directories can be created using `dir_create()`:
+
+  ```{r, eval=FALSE}
+  dir_create("this/that/what")
+  ```
+  
+- By default, intermediate directories are also created, as opposed to `dir.create()` where
+`recursive = FALSE` by default.
+
+- `dir_create()` also checks existence of the specified directory. If it already exists, nothing
+happens. In some cases, it may be more convenient to call `dir_create()` rather than creating a
+directory conditionally by first checking for exists with `dir_exists()`.
+
+## Listing items in a directory
+
+- In base-R, to list all files in a directory, we use `list.files()`. The `fs` equivalent is
+`dir_ls()`. Observe the following differences in behaviour:
+
+  ```{r}
+  list.files("../data/excel-data")
+  list.files("../data/excel-data", full.names = TRUE)
+  ```
+  
+  ```{r}
+  dir_ls("../data/excel-data")
+  ```
+
+- Rather than listing *only* the file names by default in `list.files()`, `dir_ls()` always lists
+the file paths relative to the `path` argument, equivalent to setting `full.names = TRUE` in
+`list.files()`.
+
+## Listing items in a directory
+
+- Similar to `list.files()`, we can also supply a regular expression to `dir_ls()` to filter files:
+
+  ```{r}
+  dir_ls("../docs")
+  dir_ls("../docs", regexp = "\\.Rmd")
+  ```
+
+- Alternatively, we can supply a globbing pattern, which behaves similarly to a regular expression:
+
+  ```{r}
+  dir_ls("../docs", glob = "*.Rmd")
+  ```
+
+## Applying functions to items in a directory
+
+- A common task is to read all files in a directory into a single data frame. This can be achieved
+with a combination of `dir_ls()`, `purrr::map()`, and `purrr::list_rbind()`.
+
+- The benefit of using `dir_ls()` over `list.files()` is that `fs_path`s are essentially named
+character vectors.
+
+- This makes it easy to include a column of file directories if you also need to include the source
+of a data file, without needing to manually set the names of the vector of file names.
+
+## Applying functions to items in a directory
+
+```{r}
+list.files("../data/excel-data", full.names = TRUE) |>
+  rlang::set_names() |>
+  purrr::map(readxl::read_xlsx) |>
+  purrr::list_rbind(names_to = "file")
+```
+
+. . .
+
+```{r}
+dir_ls("../data/excel-data") |>
+  purrr::map(readxl::read_xlsx) |>
+  purrr::list_rbind(names_to = "file")
+```
+
+## Filtering paths
+
+- Sometimes we need to filter paths after receiving them (e.g. user input).
+
+- It would be a shame to leave the `fs` ecosystem and revert to working with raw strings...
+Thankfully, we don't need to!
+
+- We can filter paths using regular expressions with `path_filter()`:
+
+  ```{r}
+  dir_ls("../data/excel-data")
+  dir_ls("../data/excel-data") |>
+    path_filter(regexp = "1")
+  dir_ls("../data/excel-data") |>
+    path_filter(regexp = "pizza[^2]")
+  ```
+
+## Moving/renaming files
+
+- Another convenient function is `file_move()` which allows you to move and/or rename files.
+
+- This function is especially useful when you want to rename a large number of files and it would be
+too time consuming or error-prone to rename the files manually. All you need to specify is the
+original path of the file and its new path.
+
+- I typically only use `file_move()` in an interactive setting... I think it's rare to need to use
+this non-interactively because it is typically a one-time thing.
+
+## Moving/renaming files
+
+```{r}
+old_names <- dir_ls("../data/excel-data") |>
+  path_filter(regexp = "pizza[^2]")
+```
+
+. . .
+
+```{r}
+old_names
+```
+
+. . .
+
+```{r}
+new_names <- old_names |>
+  stringr::str_replace(pattern = c("1", "3"), replacement = c("4", "6"))
+```
+
+. . .
+
+```{r}
+new_names
+```
+
+```{r}
+# Optional, just to fix the names
+new_names <- as_fs_path(new_names)
+new_names
+```
+
+. . .
+
+```{r, eval=FALSE}
+file_move(old_names, new_names)
+```
+
+## Accessing package files
+
+- To access supplementary files contained in a package (usually under the `inst` directory), one can
+use `system.file()`.
+
+- However, this only works for packages that are *installed* on your computer.
+
+- To access files for a package that is under active development (and may yet to be installed on
+your device), we can use the `path_package()` function:
+
+  ```{r, eval=FALSE}
+  # Load the package contents
+  devtools::load_all()
+  
+  # Specify the path of the file relative to the package root
+  path_package("your_pkgname", "inst/special_data.csv")
+  ```
+
+# Ok bye
+
+![](../inst/fig/you-are-ready.jpg){fig-align="center" width=35%}
+
+Now that you are equipped with [here](https://here.r-lib.org/) and [fs](https://fs.r-lib.org/), all
+of your path problems should vanish!
