@@ -278,6 +278,42 @@ Thankfully, we don't need to!
     path_filter(regexp = "pizza[^2]")
   ```
 
+## Getting a literal path
+
+- Sometimes we end up with paths with shorthand characters like `.`, `..`, and `~`. For example,
+with system environment variables:
+
+  ```{r}
+  Sys.getenv("R_HOME")
+  ```
+
+- To clean these up, in addition to things like backslashes (on Windows) and get the literal path,
+we can use `path_real()`:
+
+  ```{r}
+  path_real(Sys.getenv("R_HOME"))
+  ```
+
+- The equivalent in base-R is `normalizePath()`, but again, due to how inconsistently functions in
+base-R are named, this one can be difficult to remember:
+
+  ```{r}
+  normalizePath(Sys.getenv("R_HOME"), winslash = "/")
+  ```
+
+## Getting a literal path
+
+```{r}
+path_real("../data/excel-data")
+```
+
+. . .
+
+```{r}
+Sys.getenv("TEMP")
+path_real(Sys.getenv("TEMP"))
+```
+
 ## Moving/renaming files
 
 - Another convenient function is `file_move()` which allows you to move and/or rename files.

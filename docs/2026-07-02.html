@@ -1377,6 +1377,50 @@ Adam Shen
 </div></li>
 </ul>
 </section>
+<section id="getting-a-literal-path" class="slide level2">
+<h2>Getting a literal path</h2>
+<ul>
+<li class="fragment"><p>Sometimes we end up with paths with shorthand characters like <code>.</code>, <code>..</code>, and <code>~</code>. For example, with system environment variables:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.getenv</span>(<span class="st">&quot;R_HOME&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] &quot;C:/PROGRA~1/R/R-44~1.2&quot;</code></pre>
+</div>
+</div></li>
+<li class="fragment"><p>To clean these up, in addition to things like backslashes (on Windows) and get the literal path, we can use <code>path_real()</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">path_real</span>(<span class="fu">Sys.getenv</span>(<span class="st">&quot;R_HOME&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="fansi fansi-output"><code><span style="color: #0000BB; font-weight: bold;">C:/Program Files/R/R-4.4.2</span>
+</code></pre>
+</div></li>
+<li class="fragment"><p>The equivalent in base-R is <code>normalizePath()</code>, but again, due to how inconsistently functions in base-R are named, this one can be difficult to remember:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">normalizePath</span>(<span class="fu">Sys.getenv</span>(<span class="st">&quot;R_HOME&quot;</span>), <span class="at">winslash =</span> <span class="st">&quot;/&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] &quot;C:/Program Files/R/R-4.4.2&quot;</code></pre>
+</div>
+</div></li>
+</ul>
+</section>
+<section id="getting-a-literal-path-1" class="slide level2">
+<h2>Getting a literal path</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">path_real</span>(<span class="st">&quot;../data/excel-data&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="fansi fansi-output"><code><span style="color: #0000BB; font-weight: bold;">C:/Users/Adam/My Drive/GitHub/fast-talks/data/excel-data</span>
+</code></pre>
+</div>
+<div class="fragment">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.getenv</span>(<span class="st">&quot;TEMP&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] &quot;C:\\Users\\Adam\\AppData\\Local\\Temp&quot;</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">path_real</span>(<span class="fu">Sys.getenv</span>(<span class="st">&quot;TEMP&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="fansi fansi-output"><code><span style="color: #0000BB; font-weight: bold;">C:/Users/Adam/AppData/Local/Temp</span>
+</code></pre>
+</div>
+</div>
+</section>
 <section id="movingrenaming-files" class="slide level2">
 <h2>Moving/renaming files</h2>
 <ul>
@@ -1388,12 +1432,12 @@ Adam Shen
 <section id="movingrenaming-files-1" class="slide level2">
 <h2>Moving/renaming files</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href aria-hidden="true" tabindex="-1"></a>old_names <span class="ot">&lt;-</span> <span class="fu">dir_ls</span>(<span class="st">&quot;../data/excel-data&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb55-2"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">path_filter</span>(<span class="at">regexp =</span> <span class="st">&quot;pizza[^2]&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href aria-hidden="true" tabindex="-1"></a>old_names <span class="ot">&lt;-</span> <span class="fu">dir_ls</span>(<span class="st">&quot;../data/excel-data&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb64-2"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">path_filter</span>(<span class="at">regexp =</span> <span class="st">&quot;pizza[^2]&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="fragment">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href aria-hidden="true" tabindex="-1"></a>old_names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href aria-hidden="true" tabindex="-1"></a>old_names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>../data/excel-data/pizza1.xlsx ../data/excel-data/pizza3.xlsx </code></pre>
 </div>
@@ -1401,22 +1445,22 @@ Adam Shen
 </div>
 <div class="fragment">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href aria-hidden="true" tabindex="-1"></a>new_names <span class="ot">&lt;-</span> old_names <span class="sc">|&gt;</span></span>
-<span id="cb58-2"><a href aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace</span>(<span class="at">pattern =</span> <span class="fu">c</span>(<span class="st">&quot;1&quot;</span>, <span class="st">&quot;3&quot;</span>), <span class="at">replacement =</span> <span class="fu">c</span>(<span class="st">&quot;4&quot;</span>, <span class="st">&quot;6&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href aria-hidden="true" tabindex="-1"></a>new_names <span class="ot">&lt;-</span> old_names <span class="sc">|&gt;</span></span>
+<span id="cb67-2"><a href aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace</span>(<span class="at">pattern =</span> <span class="fu">c</span>(<span class="st">&quot;1&quot;</span>, <span class="st">&quot;3&quot;</span>), <span class="at">replacement =</span> <span class="fu">c</span>(<span class="st">&quot;4&quot;</span>, <span class="st">&quot;6&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div class="fragment">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href aria-hidden="true" tabindex="-1"></a>new_names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href aria-hidden="true" tabindex="-1"></a>new_names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  ../data/excel-data/pizza1.xlsx   ../data/excel-data/pizza3.xlsx 
 &quot;../data/excel-data/pizza4.xlsx&quot; &quot;../data/excel-data/pizza6.xlsx&quot; </code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Optional, just to fix the names</span></span>
-<span id="cb61-2"><a href aria-hidden="true" tabindex="-1"></a>new_names <span class="ot">&lt;-</span> <span class="fu">as_fs_path</span>(new_names)</span>
-<span id="cb61-3"><a href aria-hidden="true" tabindex="-1"></a>new_names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Optional, just to fix the names</span></span>
+<span id="cb70-2"><a href aria-hidden="true" tabindex="-1"></a>new_names <span class="ot">&lt;-</span> <span class="fu">as_fs_path</span>(new_names)</span>
+<span id="cb70-3"><a href aria-hidden="true" tabindex="-1"></a>new_names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>../data/excel-data/pizza4.xlsx ../data/excel-data/pizza6.xlsx </code></pre>
 </div>
@@ -1424,7 +1468,7 @@ Adam Shen
 </div>
 <div class="fragment">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">file_move</span>(old_names, new_names)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">file_move</span>(old_names, new_names)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </section>
@@ -1435,11 +1479,11 @@ Adam Shen
 <li class="fragment"><p>However, this only works for packages that are <em>installed</em> on your computer.</p></li>
 <li class="fragment"><p>To access files for a package that is under active development (and may yet to be installed on your device), we can use the <code>path_package()</code> function:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Load the package contents</span></span>
-<span id="cb64-2"><a href aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">load_all</span>()</span>
-<span id="cb64-3"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb64-4"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Specify the path of the file relative to the package root</span></span>
-<span id="cb64-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">path_package</span>(<span class="st">&quot;your_pkgname&quot;</span>, <span class="st">&quot;inst/special_data.csv&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Load the package contents</span></span>
+<span id="cb73-2"><a href aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">load_all</span>()</span>
+<span id="cb73-3"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-4"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Specify the path of the file relative to the package root</span></span>
+<span id="cb73-5"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">path_package</span>(<span class="st">&quot;your_pkgname&quot;</span>, <span class="st">&quot;inst/special_data.csv&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div></li>
 </ul>
 </section></section>
